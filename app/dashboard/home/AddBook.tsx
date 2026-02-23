@@ -16,23 +16,24 @@ import { postBooks } from "@/services/book_service";
 import { getAllAuthors } from "@/services/author_service";
 import { getAllCategories } from "@/services/category.service";
 
+
 interface Props {
-  //onAddBook: (book: any) => void;
   open: boolean;
-  //onAddBook: () => void;
-  //onClose: () => void;
   refreshBooks: () => void;
 }
+
 
 export interface DataType {
   AUTHOR_ID: number;
   AUTHOR_NAME: string;
 }
 
+
 export interface CategoryType {
   CATEGORY_ID: number;
   CATEGORY_NAME: string;
 }
+
 
 const AddBook: React.FC<Props> = ({ open,refreshBooks }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -41,6 +42,7 @@ const AddBook: React.FC<Props> = ({ open,refreshBooks }) => {
   const [createBook, setCreateBook] = useState<DataType[]>([]);
   const [authors, setAuthors] = useState<DataType[]>([]);
     const [categories, setCategories] = useState<CategoryType[]>([]);
+
 
     useEffect(() => {
         async function fetchAuthors() {
@@ -53,10 +55,11 @@ const AddBook: React.FC<Props> = ({ open,refreshBooks }) => {
           }
         }
 
+
         fetchAuthors();
-        
+       
       }, [open]);
-    
+   
       useEffect(() => {
         async function fetchAuthors() {
           try {
@@ -67,23 +70,22 @@ const AddBook: React.FC<Props> = ({ open,refreshBooks }) => {
           }
         }
 
+
         fetchAuthors();
 
+
       }, [open]);
+
 
   const showModal = () => {
     setIsModalOpen(true);
   };
 
-  // const onFinish = (values: any) => {
-  //   onAddBook(books);
-  //   setIsModalOpen(false);
-  //   form.resetFields();
-  // };
 
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
+
 
       const newBook = {
         BOOK_ID: values.BOOK_ID,
@@ -94,10 +96,8 @@ const AddBook: React.FC<Props> = ({ open,refreshBooks }) => {
         STOCK_QTY: values.STOCK_QTY,
       };
        
-
       const response = await postBooks(newBook);
-      //setCreateBook(newBook)
-      //console.log(">>> : ",response)
+
 
       setCreateBook(response.data);
       form.resetFields();
@@ -108,14 +108,17 @@ const AddBook: React.FC<Props> = ({ open,refreshBooks }) => {
     }
   };
 
+
   const handleCancel = () => {
     form.resetFields();
     setIsModalOpen(false);
   };
 
+
   const handleDeleteBook = (key: string) => {
     setBooks((prev) => prev.filter((book) => book.key !== key));
   };
+
 
   return (
     <>
@@ -123,6 +126,7 @@ const AddBook: React.FC<Props> = ({ open,refreshBooks }) => {
         <Plus size={20} strokeWidth={3} />
         เพิ่มหนังสือใหม่
       </Button>
+
 
       <Modal
         title={<div className="text-center m-2">เพิ่มหนังสือใหม่</div>}
@@ -146,6 +150,7 @@ const AddBook: React.FC<Props> = ({ open,refreshBooks }) => {
             </Col>
           </Row>
 
+
           <Row gutter={24}>
             <Col span={24}>
               <Form.Item
@@ -163,6 +168,7 @@ const AddBook: React.FC<Props> = ({ open,refreshBooks }) => {
               </Form.Item>
             </Col>
           </Row>
+
 
           <Row gutter={24}>
             <Col span={24}>
@@ -182,6 +188,7 @@ const AddBook: React.FC<Props> = ({ open,refreshBooks }) => {
             </Col>
           </Row>
 
+
           <Row gutter={24}>
             <Col span={12}>
               <Form.Item
@@ -192,6 +199,7 @@ const AddBook: React.FC<Props> = ({ open,refreshBooks }) => {
                 <InputNumber style={{ width: "100%" }} placeholder="กรอกราคา" />
               </Form.Item>
             </Col>
+
 
             <Col span={12}>
               <Form.Item
@@ -207,6 +215,7 @@ const AddBook: React.FC<Props> = ({ open,refreshBooks }) => {
             </Col>
           </Row>
 
+
           <Form.Item className="mt-3 text-center">
             <Button type="primary" htmlType="submit" className="mr-3">
               บันทึก
@@ -218,5 +227,6 @@ const AddBook: React.FC<Props> = ({ open,refreshBooks }) => {
     </>
   );
 };
+
 
 export default AddBook;

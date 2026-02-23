@@ -31,18 +31,16 @@ export default function EditBookInfo({ open, onClose, book, onUpdate, refreshBoo
   //const [updateBook, setUpdateBook] = useState();
 
   useEffect(() => {
-    if (book) {
-      form.setFieldsValue({
-        TITLE: book.TITLE,
-        AUTHOR_NAME: book.AUTHOR_NAME,
-        CATEGORY_NAME: book.CATEGORY_NAME,
-        AUTHOR_ID: book.AUTHOR_ID,
-        CATEGORY_ID: book.CATEGORY_ID,
-        PRICE: book.PRICE,
-        STOCK_QTY: book.STOCK_QTY,
-      });
-    }
-  }, [book, form]);
+  if (book && open) {
+    form.setFieldsValue({
+      TITLE: book.TITLE,
+      AUTHOR_ID: book.AUTHOR_ID,      
+      CATEGORY_ID: book.CATEGORY_ID,
+      PRICE: book.PRICE,
+      STOCK_QTY: book.STOCK_QTY,
+    });
+  }
+}, [book, open, form]);
 
   useEffect(() => {
     async function fetchAuthors() {

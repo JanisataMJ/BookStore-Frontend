@@ -11,93 +11,69 @@ interface BookInterface {
   PRICE: number;
 }
 
-/*export const getBooks = async (
-    data: GetBooksPayload,
-    mode: ScMode,
-): Promise<APIResponse> => {
-    try {
-        const endpoint = mode === M
-        const payload = {
-            biz: data.biz,
-            serial: data.product_fno,
-        };
+export async function getAllBooks(filters: {
+  title?: string;
+  author?: string;
+  category?: number;
+  page?: number;
+  pageSize?: number;
+}) {
+  const query = new URLSearchParams();
 
-        const response = await mai.get(`/books`, {
-            params: {
-                ...payload,
-            },
-        });
-        return response.data;
-    } catch (error) {
-        if (axios.isAxiosError(error)) {
-            console.error("API Error:", error.response?.data || error.message);
-        } else {
-            console.error("Unexpected Error:", error);
-        }
-        throw error;
-    }
-};*/
+  if (filters.title) query.append("title", filters.title);
+  if (filters.author) query.append("author", filters.author);
+  if (filters.category) query.append("category", filters.category.toString());
+  if (filters.page) query.append("page", filters.page.toString());
+  if (filters.pageSize) query.append("pageSize", filters.pageSize.toString());
 
-/*export const getUsers = async (): Promise<Response> => {
-  try {
-    const response = await axios.get(`/users`);
-    return response.data;
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      console.error("API Error:", error.response?.data || error.message);
-    } else {
-      console.error("Unexpected Error:", error);
-    }
-    throw error;
-  }
-};*/
+  const res = await fetch(
+    `http://localhost:8000/api/books/joinCatAu?${query.toString()}`,
+    { cache: "no-store" }
+  );
 
-export async function getAllBooks() {
-  try {
-    const res = await fetch("http://localhost:8000/books/joinCatAu", {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-      cache: "no-store",
-    });
+  if (!res.ok) {
+        throw new Error({
+          message: `API error: ${res.status}`,
+          code: res.status,
+        } as any);
+      }
 
-    if (!res.ok) {
-      throw new Error({
-        message: `API error: ${res.status}`,
-        code: res.status,
-      } as any);
-    }
-
-    return await res.json();
-  } catch (error) {
-    console.error("Error fetching books:", error);
-  }
-  throw Error;
+  return res.json();
 }
 
-// export async function putBooks() {
-//   try {
-//     const res = await fetch("http://localhost:8000/books/:id", {
-//       method: "PUT",
-//       headers: { "Content-Type": "application/json" },
-//       cache: "no-store",
-//     });
+export interface TotalBooksType {
+  totalBooks: number;
+  totalPrice: number;
+  totalStock: number;
+}
 
-//     if (!res.ok) {
-//       throw new Error({
-//         message: `API error: ${res.status}`,
-//         code: res.status,
-//       } as any);
-//     }
+interface ApiResponse<T> {
+  status: boolean;
+  message: string;
+  data: T;
+}
 
-//     return await res.json();
-//   } catch (error) {
-//     console.error("Error fetching books:", error);
-//   }
-//   throw Error;
-// }
+export const getTotalBooks = async (): Promise<TotalBooksType> => {
+  const res = await fetch("http://localhost:8000/api/bookstotal", {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    message.error({
+      content: text,
+    });
+  }
+
+  const json: ApiResponse<TotalBooksType> = await res.json();
+  return json.data;
+};
 
 export async function putBooks(id: number, payload: any) {
-  const res = await fetch(`http://localhost:8000/books/${id}`, {
+  const res = await fetch(`http://localhost:8000/api/books/${id}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -114,7 +90,7 @@ export async function putBooks(id: number, payload: any) {
 }
 
 export async function postBooks(payload: any) {
-  const res = await fetch(`http://localhost:8000/books`, {
+  const res = await fetch(`http://localhost:8000/api/books`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -130,9 +106,8 @@ export async function postBooks(payload: any) {
   return res.json();
 }
 
-
 export async function deleteBooks(id: number) {
-  const res = await fetch(`http://localhost:8000/books/${id}`, {
+  const res = await fetch(`http://localhost:8000/api/books/${id}`, {
     method: "DELETE",
   });
 

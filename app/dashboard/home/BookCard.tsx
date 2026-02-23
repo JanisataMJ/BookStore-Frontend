@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Card, Col, Row, ConfigProvider } from "antd";
 import { BookOpenText, Box, DollarSign } from "lucide-react";
+import { getTotalBooks } from "@/services/book_service";
 
 interface Book {
   PRICE: number;
@@ -12,24 +13,33 @@ interface Props {
     PRICE: number;
     STOCK_QTY: number;
   }[];
+  refreshKey: number;
 }
 
-const BookCard: React.FC<Props> = ({ books = [] }) => {
-  const totalBooks = books.length;
-  const totalStock = books.reduce(
-    (sum, book) => sum + (Number(book.STOCK_QTY) || 0),
-    0,
-  );
-  const totalValue = books.reduce(
-    (sum, book) =>
-      sum + (Number(book.PRICE) || 0) * (Number(book.STOCK_QTY) || 0),
-    0,
-  );
-  console.log("books >>> : ", books);
+export interface TotalBooksType {
+  totalBooks: number;
+  totalPrice: number;
+  totalStock: number;
+}
 
-  console.log("totalBooks >>> : ", totalBooks);
-  console.log("totalStock >>> : ", totalStock);
-  console.log("totalValue >>> : ", totalValue);
+const BookCard: React.FC<Props> = ({ books = [], refreshKey }) => {
+  const [totalBook, setTotalBook] = useState<TotalBooksType | null>(null);
+  
+  useEffect(() => {
+    getTotalBooks().then(setTotalBook).catch(console.error);
+  }, [refreshKey]);
+
+  useEffect(() => {
+    async function fetchTotalBook() {
+      try {
+        const data = await getTotalBooks();
+        setTotalBook(data);
+      } catch (err) {
+        console.log(err);
+      }
+    }
+    fetchTotalBook();
+  }, []);
 
   return (
     <div className="mb-5 mt-6">
@@ -57,7 +67,7 @@ const BookCard: React.FC<Props> = ({ books = [] }) => {
                 <div>
                   <div className="text-sm md:text-base">จำนวนหนังสือ</div>
                   <div className="text-2xl font-bold md:text-3xl break-all">
-                    {totalBooks}
+                    {totalBook?.totalBooks ?? 0}
                   </div>
                 </div>
               </div>
@@ -77,7 +87,7 @@ const BookCard: React.FC<Props> = ({ books = [] }) => {
                 <div>
                   <div className="text-sm md:text-base">สต็อกทั้งหมด</div>
                   <div className="text-2xl font-bold md:text-3xl break-all">
-                    {totalStock}
+                    {totalBook?.totalStock ?? 0}
                   </div>
                 </div>
               </div>
@@ -97,7 +107,7 @@ const BookCard: React.FC<Props> = ({ books = [] }) => {
                 <div>
                   <div className="text-sm md:text-base">มูลค่ารวม</div>
                   <div className="text-2xl font-bold md:text-3xl break-all">
-                    ฿{totalValue.toLocaleString()}
+                    ฿{totalBook?.totalPrice.toLocaleString() ?? 0}
                   </div>
                 </div>
               </div>

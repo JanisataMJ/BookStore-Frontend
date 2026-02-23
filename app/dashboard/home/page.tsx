@@ -22,17 +22,16 @@ export interface DataType {
 
 const Dashboard = () => {
   const [books, setBooks] = useState<DataType[]>([]);
+  const [refreshKey, setRefreshKey] = useState(0);
   const [loading, setLoading] = useState<boolean>(true);
 
   const fetchBooks = async () => {
-    // setLoading(true);
-    // const res = await getAllBooks();
-
-    // setBooks(res.data);
-    // console.log("res : ", res.data);
     setLoading(true);
     try {
-      const res = await getAllBooks();
+      const res = await getAllBooks({
+        page: 1,
+        pageSize: 10,
+      });
       setBooks(res.data);
       console.log("data: ", res.data);
     } catch (err) {
@@ -41,15 +40,27 @@ const Dashboard = () => {
       setLoading(false);
     }
   };
-
   useEffect(() => {
     fetchBooks();
   }, []);
 
+  const refreshBooks = async () => {
+    await fetchBooks();        // refresh ตาราง
+    setRefreshKey((k) => k + 1); // trigger การ์ด
+  };
+
+  useEffect(() => {
+    refreshBooks();
+  }, []);
+
   return (
     <div className="box-border">
-      <BookCard books={books} />
-      <BookTable books={books} setBooks={setBooks} refreshBooks={fetchBooks} />
+      <BookCard refreshKey={refreshKey} />
+      <BookTable
+        books={books}
+        setBooks={setBooks}
+        refreshBooks={refreshBooks}
+      />
     </div>
   );
 };

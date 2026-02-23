@@ -1,13 +1,15 @@
 import axios from "axios";
 import Error from "next/error";
 
+
 export async function getAllAuthors() {
   try {
-    const res = await fetch("http://localhost:8000/authors", {
+    const res = await fetch("http://localhost:8000/api/authors", {
       method: "GET",
       headers: { "Content-Type": "application/json" },
       cache: "no-store",
     });
+
 
     if (!res.ok) {
       throw new Error({
@@ -15,6 +17,7 @@ export async function getAllAuthors() {
         code: res.status,
       } as any);
     }
+
 
     return await res.json();
   } catch (error) {
