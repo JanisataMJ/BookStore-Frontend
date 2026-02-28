@@ -4,6 +4,9 @@ import { useEffect, useState } from "react";
 import { putBooks } from "@/services/book_service";
 import { getAllAuthors } from "@/services/author_service";
 import { getAllCategories } from "@/services/category.service";
+import { toast } from "react-toastify";
+import axios from "axios";
+
 
 interface Props {
   open: boolean;
@@ -13,36 +16,49 @@ interface Props {
   refreshBooks: () => void;
 }
 
+
 export interface DataType {
   AUTHOR_ID: number;
   AUTHOR_NAME: string;
 }
+
 
 export interface CategoryType {
   CATEGORY_ID: number;
   CATEGORY_NAME: string;
 }
 
-export default function EditBookInfo({ open, onClose, book, onUpdate, refreshBooks }: Props) {
+
+export default function EditBookInfo({
+  open,
+  onClose,
+  book,
+  onUpdate,
+  refreshBooks,
+}: Props) {
   const [form] = Form.useForm();
   const variant = Form.useWatch("variant", form);
   const [authors, setAuthors] = useState<DataType[]>([]);
   const [categories, setCategories] = useState<CategoryType[]>([]);
+  const [loading, setLoading] = useState(false);
   //const [updateBook, setUpdateBook] = useState();
 
-  useEffect(() => {
-  if (book && open) {
-    form.setFieldsValue({
-      TITLE: book.TITLE,
-      AUTHOR_ID: book.AUTHOR_ID,      
-      CATEGORY_ID: book.CATEGORY_ID,
-      PRICE: book.PRICE,
-      STOCK_QTY: book.STOCK_QTY,
-    });
-  }
-}, [book, open, form]);
 
   useEffect(() => {
+    if (book && open) {
+      form.setFieldsValue({
+        TITLE: book.TITLE,
+        AUTHOR_ID: book.AUTHOR_ID,
+        CATEGORY_ID: book.CATEGORY_ID,
+        PRICE: book.PRICE,
+        STOCK_QTY: book.STOCK_QTY,
+        REASON: book.REASON || "",
+      });
+    }
+  }, [book, open, form]);
+
+
+  /*useEffect(() => {
     async function fetchAuthors() {
       try {
         const res = await getAllAuthors();
@@ -57,6 +73,7 @@ export default function EditBookInfo({ open, onClose, book, onUpdate, refreshBoo
     }
   }, [open]);
 
+
   useEffect(() => {
     async function fetchAuthors() {
       try {
@@ -69,17 +86,37 @@ export default function EditBookInfo({ open, onClose, book, onUpdate, refreshBoo
     if (open) {
       fetchAuthors();
     }
+  }, [open]);*/
+
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const res = await Promise.all([getAllAuthors(), getAllCategories()]);
+        setAuthors(res[0].data);
+        setCategories(res[1].data);
+      } catch (err) {
+        console.log(err);
+      }
+    }
+    if (open) {
+      fetchData();
+    }
   }, [open]);
+
 
   const handleSubmit = async () => {
     try {
+      setLoading(true);
       const values = await form.validateFields();
       console.log("BOOK_ID : ", book.BOOK_ID);
+
 
       if (!book?.BOOK_ID) {
         console.log("No ID found");
         return;
       }
+
 
       console.log("values book : ", values);
       const payload = {
@@ -88,17 +125,23 @@ export default function EditBookInfo({ open, onClose, book, onUpdate, refreshBoo
         CATEGORY_ID: values.CATEGORY_ID,
         PRICE: values.PRICE,
         STOCK_QTY: values.STOCK_QTY,
-      }
+        REASON: values.REASON,
+      };
       console.log("payload book : ", payload);
-      await putBooks(book.BOOK_ID,payload );
+      await putBooks(book.BOOK_ID, payload);
+
 
       refreshBooks();
-
       onClose();
+      toast.success("แก้ไขข้อมูลหนังสือเรียบร้อย");
     } catch (error) {
       console.log(error);
+      toast.error("แก้ไขข้อมูลหนังสือไม่สำเร็จ");
+    } finally {
+      setLoading(false);
     }
   };
+
 
   const formItemLayout = {
     labelCol: {
@@ -111,6 +154,7 @@ export default function EditBookInfo({ open, onClose, book, onUpdate, refreshBoo
     },
   };
 
+
   return (
     <Modal
       title="แก้ไขข้อมูลหนังสือ"
@@ -118,6 +162,7 @@ export default function EditBookInfo({ open, onClose, book, onUpdate, refreshBoo
       onCancel={onClose}
       onOk={handleSubmit}
       okText="บันทึก"
+      loading={loading}
       cancelText="ยกเลิก"
       mask={{ closable: false }}
     >
@@ -143,7 +188,6 @@ export default function EditBookInfo({ open, onClose, book, onUpdate, refreshBoo
               >
                 <Input placeholder="กรอกชื่อหนังสือ" />
               </Form.Item>
-
               <Form.Item
                 label="ผู้แต่ง"
                 name="AUTHOR_ID"
@@ -158,6 +202,7 @@ export default function EditBookInfo({ open, onClose, book, onUpdate, refreshBoo
                 />
               </Form.Item>
             </Col>
+
 
             <Row gutter={24}>
               <Col className="gutter-row" span={24}>
@@ -176,6 +221,7 @@ export default function EditBookInfo({ open, onClose, book, onUpdate, refreshBoo
                 </Form.Item>
               </Col>
             </Row>
+
 
             <Row gutter={24}>
               <Col className="gutter-row" span={12}>
@@ -200,6 +246,15 @@ export default function EditBookInfo({ open, onClose, book, onUpdate, refreshBoo
                     style={{ width: "100%" }}
                     placeholder="กรอกจำนวนสต็อก"
                   />
+                </Form.Item>
+              </Col>
+              <Col>
+                <Form.Item
+                  label="เหตุผล"
+                  name="REASON"
+                  rules={[{ required: true, message: "กรุณากรอกเหตุผล" }]}
+                >
+                  <Input placeholder="กรอกเหตุผล" />
                 </Form.Item>
               </Col>
             </Row>

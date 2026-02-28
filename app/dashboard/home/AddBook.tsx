@@ -11,81 +11,65 @@ import {
   Modal,
   Divider,
 } from "antd";
-import { Plus } from "lucide-react";
 import { postBooks } from "@/services/book_service";
 import { getAllAuthors } from "@/services/author_service";
 import { getAllCategories } from "@/services/category.service";
-
+import { toast } from "react-toastify";
 
 interface Props {
   open: boolean;
+  setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   refreshBooks: () => void;
 }
-
 
 export interface DataType {
   AUTHOR_ID: number;
   AUTHOR_NAME: string;
 }
 
-
 export interface CategoryType {
   CATEGORY_ID: number;
   CATEGORY_NAME: string;
 }
 
-
-const AddBook: React.FC<Props> = ({ open,refreshBooks }) => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+const AddBook: React.FC<Props> = ({ open, setOpen, refreshBooks }) => {
+  //const [isModalOpen, setIsModalOpen] = useState(false);
   const [form] = Form.useForm();
   const [books, setBooks] = useState<any[]>([]);
   const [createBook, setCreateBook] = useState<DataType[]>([]);
   const [authors, setAuthors] = useState<DataType[]>([]);
-    const [categories, setCategories] = useState<CategoryType[]>([]);
+  const [categories, setCategories] = useState<CategoryType[]>([]);
 
+  useEffect(() => {
+    async function fetchAuthors() {
+      try {
+        const res = await getAllAuthors();
+        setAuthors(res.data);
+        console.log(res.data);
+      } catch (err) {
+        console.log(err);
+      }
+    }
 
-    useEffect(() => {
-        async function fetchAuthors() {
-          try {
-            const res = await getAllAuthors();
-            setAuthors(res.data);
-            console.log(res.data);
-          } catch (err) {
-            console.log(err);
-          }
-        }
+    fetchAuthors();
+  }, [open]);
 
+  useEffect(() => {
+    async function fetchAuthors() {
+      try {
+        const res = await getAllCategories();
+        setCategories(res.data);
+      } catch (err) {
+        console.log(err);
+      }
+    }
 
-        fetchAuthors();
-       
-      }, [open]);
-   
-      useEffect(() => {
-        async function fetchAuthors() {
-          try {
-            const res = await getAllCategories();
-            setCategories(res.data);
-          } catch (err) {
-            console.log(err);
-          }
-        }
-
-
-        fetchAuthors();
-
-
-      }, [open]);
-
-
-  const showModal = () => {
-    setIsModalOpen(true);
-  };
-
+    fetchAuthors();
+  }, [open]);
 
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
-
 
       const newBook = {
         BOOK_ID: values.BOOK_ID,
@@ -95,49 +79,55 @@ const AddBook: React.FC<Props> = ({ open,refreshBooks }) => {
         PRICE: values.PRICE,
         STOCK_QTY: values.STOCK_QTY,
       };
-       
-      const response = await postBooks(newBook);
 
+      const response = await postBooks(newBook);
 
       setCreateBook(response.data);
       form.resetFields();
-      setIsModalOpen(false);
+      setOpen(false);
       refreshBooks();
-    } catch (error) {
-      console.log(error);
-    }
-  };
+    } catch (error: any) {
+  console.log("Full error:", error);
 
+  const backendMessage =
+    error?.response?.data?.message ||
+    error?.response?.data ||
+    error?.message;
+
+  if (backendMessage?.includes("already exists")) {
+    toast.error("ชื่อหนังสือนี้มีอยู่แล้วในระบบ");
+  } else {
+    toast.error(backendMessage || "บันทึกข้อมูลไม่สำเร็จ");
+  }
+}
+  };
 
   const handleCancel = () => {
     form.resetFields();
-    setIsModalOpen(false);
+    setOpen(false);
   };
-
 
   const handleDeleteBook = (key: string) => {
     setBooks((prev) => prev.filter((book) => book.key !== key));
   };
 
-
   return (
     <>
-      <Button type="primary" onClick={showModal}>
-        <Plus size={20} strokeWidth={3} />
-        เพิ่มหนังสือใหม่
-      </Button>
-
-
       <Modal
         title={<div className="text-center m-2">เพิ่มหนังสือใหม่</div>}
-        open={isModalOpen}
+        open={open}
         footer={null}
         onCancel={handleCancel}
         mask={{ closable: false }}
         //onOk={handleSubmit}
       >
         <Divider className="size-0.5 bg-gray-200" />
-        <Form form={form} layout="vertical" onFinish={handleSubmit} key={"BOOK_ID"}>
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleSubmit}
+          key={"BOOK_ID"}
+        >
           <Row gutter={24}>
             <Col span={24}>
               <Form.Item
@@ -149,7 +139,6 @@ const AddBook: React.FC<Props> = ({ open,refreshBooks }) => {
               </Form.Item>
             </Col>
           </Row>
-
 
           <Row gutter={24}>
             <Col span={24}>
@@ -169,7 +158,6 @@ const AddBook: React.FC<Props> = ({ open,refreshBooks }) => {
             </Col>
           </Row>
 
-
           <Row gutter={24}>
             <Col span={24}>
               <Form.Item
@@ -178,16 +166,15 @@ const AddBook: React.FC<Props> = ({ open,refreshBooks }) => {
                 rules={[{ required: true, message: "กรุณากรอกข้อมูล" }]}
               >
                 <Select
-                    placeholder="เลือกผู้แต่ง"
-                    options={categories.map((cat) => ({
-                      value: cat.CATEGORY_ID,
-                      label: cat.CATEGORY_NAME,
-                    }))}
-                  />
+                  placeholder="เลือกผู้แต่ง"
+                  options={categories.map((cat) => ({
+                    value: cat.CATEGORY_ID,
+                    label: cat.CATEGORY_NAME,
+                  }))}
+                />
               </Form.Item>
             </Col>
           </Row>
-
 
           <Row gutter={24}>
             <Col span={12}>
@@ -199,7 +186,6 @@ const AddBook: React.FC<Props> = ({ open,refreshBooks }) => {
                 <InputNumber style={{ width: "100%" }} placeholder="กรอกราคา" />
               </Form.Item>
             </Col>
-
 
             <Col span={12}>
               <Form.Item
@@ -215,7 +201,6 @@ const AddBook: React.FC<Props> = ({ open,refreshBooks }) => {
             </Col>
           </Row>
 
-
           <Form.Item className="mt-3 text-center">
             <Button type="primary" htmlType="submit" className="mr-3">
               บันทึก
@@ -227,6 +212,5 @@ const AddBook: React.FC<Props> = ({ open,refreshBooks }) => {
     </>
   );
 };
-
 
 export default AddBook;
