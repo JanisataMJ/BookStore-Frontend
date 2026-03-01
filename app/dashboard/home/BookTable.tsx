@@ -218,21 +218,6 @@ const BookTable: React.FC<Props> = ({ books, setBooks, refreshBooks }) => {
     return () => clearTimeout(delay);
   }, [searchText, categoryId]);
 
-  // const handleSubmit = async () => {
-  //   setLoading(true);
-  //   if (!file) return;
-
-  //   try {
-  //     await postUpload(file);
-  //     console.log("Upload success");
-  //     toast.success("อัปโหลดไฟล์สำเร็จ");
-  //   } catch (error) {
-  //     console.error(error);
-  //     toast.error("อัปโหลดไฟล์ไม่สำเร็จ");
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
 
   const handleRemoveFile = () => {
     setFile(null);
@@ -267,20 +252,19 @@ const BookTable: React.FC<Props> = ({ books, setBooks, refreshBooks }) => {
           />
         </div>
         <div className="flex gap-2 items-center">
-          <Form className="w-full md:w-64">
+          <Form className="w-full md:w-40">
             <input
               type="file"
               ref={fileInputRef}
               onChange={handleChange}
               style={{ display: "none" }}
             />
-
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="flex items-center justify-between gap-2 px-4 py-2 border border-dashed border-gray-400 rounded-lg hover:bg-gray-100 w-full md:w-64"
+              className="flex items-center justify-between gap-2 px-2 py-1 border border-dashed border-gray-400 rounded-lg hover:bg-gray-100 w-full md:w-40 text-sm "
             >
-              <div className="flex items-center gap-2 text-gray-500 truncate">
+              <div className="flex items-center gap-2 text-gray-400 truncate">
                 <Upload size={18} />
                 <span className={file ? "text-green-600" : ""}>
                   {file ? file.name : "อัปโหลดไฟล์ Excel"}
@@ -304,7 +288,7 @@ const BookTable: React.FC<Props> = ({ books, setBooks, refreshBooks }) => {
             onClick={handleAddOrUpload}
             loading={loading}
             icon={<Plus size={20} strokeWidth={2} />}
-            className="w-full md:w-auto"
+            className="w-full md:w-auto py-5 text-base"
           >
             เพิ่มหนังสือใหม่
           </Button>
