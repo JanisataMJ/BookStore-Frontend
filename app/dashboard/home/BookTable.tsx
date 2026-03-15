@@ -1,17 +1,28 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { Table, Input, Select, Form, UploadFile, Button } from "antd";
+import {
+  Table,
+  Input,
+  Select,
+  Form,
+  UploadFile,
+  Button,
+  Radio,
+  Upload,
+} from "antd";
+import { UploadOutlined, DownloadOutlined } from "@ant-design/icons";
 import type { TableProps } from "antd";
 import EditBookInfo from "./EditBookInfo";
 import DeleteBook from "./DeleteBook";
 import AddBook from "./AddBook";
-import { Pencil, Trash, X, Upload, Plus } from "lucide-react";
+import { Pencil, Trash, X, Plus } from "lucide-react";
 import { getAllBooks } from "@/services/book_service";
 import { getAllCategories } from "@/services/category.service";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { postUpload } from "@/services/upload_service";
 import { toast } from "react-toastify";
 import { useRef } from "react";
+import { addUploadFile } from "@/services/setting_service";
 
 interface Props {
   books: DataType[];
@@ -52,32 +63,50 @@ const BookTable: React.FC<Props> = ({ books, setBooks, refreshBooks }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      const selectedFile = e.target.files[0];
+    if (!e.target.files || e.target.files.length === 0) return;
 
-      // ตรวจสอบ type
-      if (
-        selectedFile.type !==
-          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" && // .xlsx
-        selectedFile.type !== "application/vnd.ms-excel" // .xls
-      ) {
-        alert("กรุณาอัปโหลดไฟล์ Excel (.xlsx หรือ .xls) เท่านั้น");
-        return;
-      }
+    const selectedFile = e.target.files[0];
 
-      setFile(selectedFile);
+    const allowedTypes = [
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "application/vnd.ms-excel",
+    ];
+
+    if (!allowedTypes.includes(selectedFile.type)) {
+      toast.error("กรุณาอัปโหลดไฟล์ Excel (.xlsx หรือ .xls)");
+
+      return;
     }
+
+    setFile(selectedFile);
   };
 
   const handleAddOrUpload = async () => {
     // ถ้ามีไฟล์ → upload
     if (file) {
+      const allowedTypes = [
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "application/vnd.ms-excel",
+      ];
+
+      if (!allowedTypes.includes(file.type)) {
+        toast.error("กรุณาอัปโหลดไฟล์ Excel (.xlsx หรือ .xls)");
+        return;
+      }
+
       setLoading(true);
 
       try {
-        await postUpload(file);
-        toast.success("อัปโหลดไฟล์สำเร็จ");
-        setFile(null); // reset file
+        await addUploadFile(file);
+
+        toast.success("อัปโหลด Excel สำเร็จ");
+
+        setFile(null);
+
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+
         refreshBooks();
       } catch (error: any) {
         const errorMessage =
@@ -93,7 +122,7 @@ const BookTable: React.FC<Props> = ({ books, setBooks, refreshBooks }) => {
       return;
     }
 
-    // ถ้าไม่มีไฟล์ → เปิด modal เพิ่มหนังสือปกติ
+    // ไม่มีไฟล์ → เพิ่มหนังสือปกติ
     setAddModalOpen(true);
   };
 
@@ -218,7 +247,6 @@ const BookTable: React.FC<Props> = ({ books, setBooks, refreshBooks }) => {
     return () => clearTimeout(delay);
   }, [searchText, categoryId]);
 
-
   const handleRemoveFile = () => {
     setFile(null);
 
@@ -226,6 +254,37 @@ const BookTable: React.FC<Props> = ({ books, setBooks, refreshBooks }) => {
       fileInputRef.current.value = "";
     }
   };
+
+  const downloadTemplate = () => {
+    window.open("/template/template-books.xlsx");
+  };
+
+  // const props = {
+  //   showUploadList: false,
+
+  //   beforeUpload: async (file: File) => {
+  //     try {
+  //       setLoading(true);
+
+  //       await addUploadFile(file);
+
+  //       toast.success("อัปโหลด Excel สำเร็จ");
+
+  //       refreshBooks();
+  //     } catch (error: any) {
+  //       const errorMessage =
+  //         error?.response?.data?.message ||
+  //         error?.message ||
+  //         "อัปโหลดไฟล์ไม่สำเร็จ";
+
+  //       toast.error(errorMessage);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+
+  //     return false; // ปิด auto upload ของ Ant Design
+  //   },
+  // };
 
   return (
     <div className="p-5 bg-white shadow-md rounded-md mt-8">
@@ -252,6 +311,38 @@ const BookTable: React.FC<Props> = ({ books, setBooks, refreshBooks }) => {
           />
         </div>
         <div className="flex gap-2 items-center">
+          {/* <Radio.Group>
+            <Radio.Button value="download" onClick={downloadTemplate}>
+              <DownloadOutlined /> Download Template
+            </Radio.Button>
+
+            <Upload {...props} showUploadList={false}>
+              <Radio.Button value="upload">
+                <UploadOutlined /> Upload Excel
+              </Radio.Button>
+            </Upload>
+          </Radio.Group> */}
+
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Button
+              type="dashed"
+              icon={<DownloadOutlined />}
+              onClick={downloadTemplate}
+              className="w-full sm:w-auto"
+            >
+              Download Template
+            </Button>
+
+            <Button
+              type="dashed"
+              icon={<UploadOutlined />}
+              onClick={() => fileInputRef.current?.click()}
+              className="w-full sm:w-auto"
+            >
+              เลือกไฟล์ Excel
+            </Button>
+          </div>
+
           <Form className="w-full md:w-40">
             <input
               type="file"
@@ -265,7 +356,7 @@ const BookTable: React.FC<Props> = ({ books, setBooks, refreshBooks }) => {
               className="flex items-center justify-between gap-2 px-2 py-1 border border-dashed border-gray-400 rounded-lg hover:bg-gray-100 w-full md:w-40 text-sm "
             >
               <div className="flex items-center gap-2 text-gray-400 truncate">
-                <Upload size={18} />
+                <Plus size={18} />
                 <span className={file ? "text-green-600" : ""}>
                   {file ? file.name : "อัปโหลดไฟล์ Excel"}
                 </span>

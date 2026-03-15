@@ -8,6 +8,7 @@ import clsx from 'clsx';
 
 const links = [
   { name: 'Dashboard', href: '/dashboard/home', icon: Squares2X2Icon },
+  { name: 'Setting', href: '/dashboard/setting_scanio', icon: Squares2X2Icon },
 ];
 
 export default function NavLinks() {
